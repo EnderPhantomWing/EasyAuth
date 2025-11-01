@@ -11,7 +11,7 @@
   "text.easyauth.cannotUnregister": "§c该账户无法注销！",
   "text.easyauth.notAuthenticated": "§c未登录！§6请尝试用/login、/l或/register。",
   "text.easyauth.alreadyAuthenticated": "§6你已登录。",
-  "text.easyauth.successfullyAuthenticated": "§a登陆成功。",
+  "text.easyauth.successfullyAuthenticated": "§a登录成功。",
   "text.easyauth.successfulLogout": "§a登出成功。",
   "text.easyauth.timeExpired": "§c登录超时。",
   "text.easyauth.registerRequired": "§6输入/register §c密码§e §c密码§e以注册该账号。",
