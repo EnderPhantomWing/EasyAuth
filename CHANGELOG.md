@@ -7,11 +7,22 @@
 - Check how offline players work if they try to connect with a taken online account
 
 ---
-### 3.4.0
+### 3.4.1
 ##### Minecraft 1.19.4, 1.20[.X], 1.21[.X]
 #### Fix
-- Not sending register prompt on login if coordinates hiding is disabled
-- Fix false-positive UUID mismatch
+- Incompatibility with QuickBackupMulti mod [#232](https://github.com/NikitaCartes/EasyAuth/issues/232)
+- MongoDB connection [#247](https://github.com/NikitaCartes/EasyAuth/issues/247), thanks to @MemoKing34
+
+#### Changes
+- Update Chinese translation [#233](https://github.com/NikitaCartes/EasyAuth/issues/233), thanks to @ShadyLeaf
+
+---
+### 3.4.0
+##### Minecraft 1.21.9-1.21.10
+#### Fix
+- Not sending register prompt on login if coordinates hiding is disabled [#237](https://github.com/NikitaCartes/EasyAuth/issues/237)
+- False-positive UUID mismatch
+- Not preventing "Kick from another location" disconnection
 
 ---
 ### 3.3.6
