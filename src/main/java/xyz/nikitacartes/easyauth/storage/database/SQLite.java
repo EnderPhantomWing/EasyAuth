@@ -1,12 +1,12 @@
 package xyz.nikitacartes.easyauth.storage.database;
 
 import net.minecraft.util.Uuids;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import xyz.nikitacartes.easyauth.EasyAuth;
 import xyz.nikitacartes.easyauth.config.StorageConfigV1;
 import xyz.nikitacartes.easyauth.storage.PlayerEntryV1;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import java.io.File;
 import java.sql.*;
 import java.util.HashMap;
@@ -78,16 +78,19 @@ public class SQLite implements DbApi {
 
     @Override
     public void registerUser(PlayerEntryV1 data) {
+        LogDebug("Registering new player " + data.username + ": " + data.toJson());
         try {
             PreparedStatement statement = connection.prepareStatement("INSERT INTO " + config.sqlite.sqliteTable + " (username, username_lower, uuid, data) VALUES (?, ?, ?, ?);");
             statement.setString(1, data.username);
             statement.setString(2, data.usernameLowerCase);
             statement.setObject(3, data.uuid);
             statement.setString(4, data.toJson());
-            statement.executeUpdate();
+            if (statement.executeUpdate() == 0) {
+                LogError("Failed to register user " + data.username + ": " + data.toJson());
+            }
             statement.close();
         } catch (SQLException e) {
-            LogError("Error registering user in SQLite database: " + data, e);
+            LogError("Error registering user: " + data.toJson(), e);
         }
     }
 
@@ -124,14 +127,15 @@ public class SQLite implements DbApi {
 
             resultSet.close();
             statement.close();
+            LogDebug("Retrieved player data for " + username + ": " + (playerEntry != null ? playerEntry.toJson() : "null"));
             return playerEntry;
         } catch (SQLException e) {
-            LogError("Error checking user registration in SQLite database", e);
+            LogError("Error checking user registration", e);
         }
         return null;
     }
 
-    public @Nonnull PlayerEntryV1 getUserDataOrCreate(String username) {
+    public @NotNull PlayerEntryV1 getUserDataOrCreate(String username) {
         PlayerEntryV1 playerEntry = getUserData(username);
         if (playerEntry == null) {
             playerEntry = new PlayerEntryV1(username);
@@ -141,28 +145,40 @@ public class SQLite implements DbApi {
     }
 
     @Override
-    public void deleteUserData(String username) {
+    public boolean deleteUserData(String username) {
+        LogDebug("Deleting player data for " + username);
         try {
             PreparedStatement statement = connection.prepareStatement("DELETE FROM " + config.sqlite.sqliteTable + " WHERE username = ?;");
             statement.setString(1, username);
-            statement.executeUpdate();
+            int rowsAffected = statement.executeUpdate();
             statement.close();
+            if (rowsAffected == 0) {
+                LogError("Failed to delete user " + username);
+            }
+            return rowsAffected > 0;
         } catch (SQLException e) {
-            LogError("Error deleting user data in SQLite database", e);
+            LogError("Error deleting user data", e);
+            return false;
         }
     }
 
     @Override
-    public void updateUserData(PlayerEntryV1 data) {
+    public boolean updateUserData(PlayerEntryV1 data) {
+        LogDebug("Updating player data for " + data.username + ": " + data.toJson());
         try {
             PreparedStatement statement = connection.prepareStatement("UPDATE " + config.sqlite.sqliteTable + " SET uuid = ?, data = ? WHERE username = ?;");
             statement.setObject(1, data.uuid);
             statement.setString(2, data.toJson());
             statement.setString(3, data.username);
-            statement.executeUpdate();
+            int rowsAffected = statement.executeUpdate();
             statement.close();
+            if (rowsAffected == 0) {
+                LogError("Failed to update user " + data.username + ": " + data.toJson());
+            }
+            return rowsAffected > 0;
         } catch (SQLException e) {
-            LogError("Error updating user data in SQLite database: " + data, e);
+            LogError("Error updating user data: " + data.toJson(), e);
+            return false;
         }
     }
 
@@ -182,7 +198,7 @@ public class SQLite implements DbApi {
             resultSet.close();
             statement.close();
         } catch (SQLException e) {
-            LogError("Error retrieving all data from SQLite database", e);
+            LogError("Error retrieving all data", e);
         }
         return registeredPlayers;
     }
@@ -191,7 +207,7 @@ public class SQLite implements DbApi {
     public void migrateFromV1(HashMap<String, String> userCache) {
         try {
             PreparedStatement preparedStatement = connection.prepareStatement("INSERT INTO " + config.sqlite.sqliteTable + " (username, username_lower, uuid, data) VALUES (?, ?, ?, ?);");
-            LevelDB levelDB = new LevelDB(EasyAuth.storageConfig);
+            LevelDB levelDB = new LevelDB();
             levelDB.connect();
             userCache.forEach((username, uuid) -> {
                 try {

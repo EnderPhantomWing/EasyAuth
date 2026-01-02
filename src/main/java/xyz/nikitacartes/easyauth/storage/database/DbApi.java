@@ -1,11 +1,11 @@
 package xyz.nikitacartes.easyauth.storage.database;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import xyz.nikitacartes.easyauth.EasyAuth;
 import xyz.nikitacartes.easyauth.storage.PlayerEntryV1;
 import xyz.nikitacartes.easyauth.storage.deprecated.PlayerCacheV0;
 
-import javax.annotation.Nullable;
 import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
 import java.time.ZoneOffset;
@@ -62,15 +62,17 @@ public interface DbApi {
      * Deletes data for the provided username.
      *
      * @param username username of player to delete data for
+     * @return true if player data was deleted, otherwise false
      */
-    void deleteUserData(String username);
+    boolean deleteUserData(String username);
 
     /**
      * Updates player's data.
      *
      * @param data data to put inside database
+     * @return true if player data was updated, otherwise false
      */
-    void updateUserData(PlayerEntryV1 data);
+    boolean updateUserData(PlayerEntryV1 data);
 
     /**
      * Get all data from DbApi.
