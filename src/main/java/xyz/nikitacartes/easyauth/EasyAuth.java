@@ -23,8 +23,9 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-import static xyz.nikitacartes.easyauth.config.ConfigMigration.migrateFromV1;
-import static xyz.nikitacartes.easyauth.config.ConfigMigration.migrateFromV2;
+import static xyz.nikitacartes.easyauth.config.ConfigMigration.*;
+import static xyz.nikitacartes.easyauth.config.MainConfigV1.CURRENT_CONFIG_VERSION;
+import static xyz.nikitacartes.easyauth.config.StorageConfigV1.getDbApi;
 import static xyz.nikitacartes.easyauth.utils.EasyLogger.*;
 
 public class EasyAuth {
@@ -46,13 +47,7 @@ public class EasyAuth {
 
 
     public static void loadDatabase() {
-        if (storageConfig.databaseType.equalsIgnoreCase("mysql")) {
-            DB = new MySQL(storageConfig);
-        } else if (storageConfig.databaseType.equalsIgnoreCase("mongodb")) {
-            DB = new MongoDB(storageConfig);
-        } else {
-            DB = new SQLite(storageConfig);
-        }
+        DB = getDbApi();
         try {
             DB.connect();
         } catch (DBApiException e) {
@@ -109,8 +104,6 @@ public class EasyAuth {
         DB.close();
     }
 
-    private static final int CURRENT_CONFIG_VERSION = 3;
-
     public static void loadConfigs() {
         int configVersion = VersionConfig.load().configVersion;
 
@@ -135,13 +128,7 @@ public class EasyAuth {
         EasyAuth.extendedConfig = ExtendedConfigV1.load();
         EasyAuth.storageConfig = StorageConfigV1.load();
 
-        // Apply migrations sequentially
-        if (configVersion < 2) {
-            migrateFromV1();
-        }
-        if (configVersion < 3) {
-            migrateFromV2();
-        }
+        configMigration(configVersion);
     }
 
     public static void saveConfigs() {
